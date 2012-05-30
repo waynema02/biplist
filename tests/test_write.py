@@ -2,7 +2,7 @@ from biplist import *
 from biplist import PlistWriter
 import datetime
 import os
-from cStringIO import StringIO
+from io import StringIO
 import subprocess
 import tempfile
 from test_utils import *
@@ -16,7 +16,7 @@ class TestWritePlist(unittest.TestCase):
         plist = writePlistToString(root, binary=(not xml))
         self.assertTrue(len(plist) > 0)
         readResult = readPlistFromString(plist)
-        self.assertEquals(readResult, root)
+        self.assertEqual(readResult, root)
         self.lintPlist(plist)
     
     def lintPlist(self, plistString):
@@ -37,7 +37,7 @@ class TestWritePlist(unittest.TestCase):
         self.roundTrip(False)
     
     def testDuplicate(self):
-        l = ["foo" for i in xrange(0, 100)]
+        l = ["foo" for i in range(0, 100)]
         self.roundTrip(l)
         
     def testListRoot(self):
@@ -50,11 +50,11 @@ class TestWritePlist(unittest.TestCase):
         result = readPlistFromString(writePlistToString(cases))
         for i in range(0, len(cases)):
             self.assertTrue(cases[i] == result[i])
-            self.assertEquals(type(cases[i]), type(result[i]), "Type mismatch on %d: %s != %s" % (i, repr(cases[i]), repr(result[i])))
+            self.assertEqual(type(cases[i]), type(result[i]), "Type mismatch on %d: %s != %s" % (i, repr(cases[i]), repr(result[i])))
     
     def reprChecker(self, case):
         result = readPlistFromString(writePlistToString(case))
-        self.assertEquals(repr(case), repr(result))
+        self.assertEqual(repr(case), repr(result))
     
     def testBoolsAndIntegersMixed(self):
         self.boolsAndIntegersHelper([0, 1, True, False, None])
@@ -77,8 +77,8 @@ class TestWritePlist(unittest.TestCase):
         result = writePlistToString({'aTuple':(1, 2.0, 'a'), 'dupTuple':('a', 'a', 'a', 'b', 'b')})
         self.assertTrue(len(result) > 0)
         readResult = readPlistFromString(result)
-        self.assertEquals(readResult['aTuple'], [1, 2.0, 'a'])
-        self.assertEquals(readResult['dupTuple'], ['a', 'a', 'a', 'b', 'b'])
+        self.assertEqual(readResult['aTuple'], [1, 2.0, 'a'])
+        self.assertEqual(readResult['dupTuple'], ['a', 'a', 'a', 'b', 'b'])
     
     def testComplicated(self):
         root = {'preference':[1, 2, {'hi there':['a', 1, 2, {'yarrrr':123}]}]}
@@ -92,7 +92,7 @@ class TestWritePlist(unittest.TestCase):
     
     def testLargeDict(self):
         d = {}
-        for i in xrange(0, 1000):
+        for i in range(0, 1000):
             d['%d' % i] = '%d' % i
         self.roundTrip(d)
         
@@ -150,7 +150,7 @@ class TestWritePlist(unittest.TestCase):
         for bytelen, tests in bytes:
             for test in tests:
                 got = writer.intSize(test)
-                self.assertEquals(bytelen, got, "Byte size is wrong. Expected %d, got %d" % (bytelen, got))
+                self.assertEqual(bytelen, got, "Byte size is wrong. Expected %d, got %d" % (bytelen, got))
         
         bytes_lists = [list(x) for x in bytes]
         self.roundTrip(bytes_lists)
@@ -165,13 +165,13 @@ class TestWritePlist(unittest.TestCase):
         self.roundTrip(Data("woohoo"))
         
     def testUnicode(self):
-        unicodeRoot = u"Mirror's Edge\u2122 for iPad"
+        unicodeRoot = "Mirror's Edge\u2122 for iPad"
         writePlist(unicodeRoot, "/tmp/odd.plist")
         self.roundTrip(unicodeRoot)
-        unicodeStrings = [u"Mirror's Edge\u2122 for iPad", u'Weightbot \u2014 Track your Weight in Style']
+        unicodeStrings = ["Mirror's Edge\u2122 for iPad", 'Weightbot \u2014 Track your Weight in Style']
         self.roundTrip(unicodeStrings)
-        self.roundTrip({u"":u""})
-        self.roundTrip(u"")
+        self.roundTrip({"":""})
+        self.roundTrip("")
         
     def testUidWrite(self):
         self.roundTrip({'$version': 100000, 

@@ -10,14 +10,14 @@ class TestValidPlistFile(unittest.TestCase):
     
     def validateSimpleBinaryRoot(self, root):
         self.assertTrue(type(root) == dict, "Root should be dictionary.")
-        self.assertTrue(type(root['dateItem']) == datetime.datetime, "date should be datetime")
-        self.assertEquals(root['dateItem'], datetime.datetime(2010, 8, 19, 22, 27, 30, 385449), "dates not equal" )
-        self.assertEquals(root['numberItem'], -10000000000000000L, "number not of expected value")
-        self.assertEquals(root['unicodeItem'], u'abc\u212cdef\u2133')
-        self.assertEquals(root['stringItem'], 'Hi there')
-        self.assertEquals(root['realItem'], 0.47)
-        self.assertEquals(root['boolItem'], True)
-        self.assertEquals(root['arrayItem'], ['item0'])
+        self.assertTrue(type(root[b'dateItem']) == datetime.datetime, "date should be datetime")
+        self.assertEqual(root[b'dateItem'], datetime.datetime(2010, 8, 19, 22, 27, 30, 385449), "dates not equal" )
+        self.assertEqual(root[b'numberItem'], -10000000000000000, "number not of expected value")
+        self.assertEqual(root[b'unicodeItem'], 'abc\u212cdef\u2133')
+        self.assertEqual(root[b'stringItem'], b'Hi there')
+        self.assertEqual(root[b'realItem'], 0.47)
+        self.assertEqual(root[b'boolItem'], True)
+        self.assertEqual(root[b'arrayItem'], [b'item0'])
         
     def testFileRead(self):
         try:
@@ -30,15 +30,15 @@ class TestValidPlistFile(unittest.TestCase):
     
     def testUnicodeRoot(self):
         result = readPlist(data_path('unicode_root.plist'))
-        self.assertEquals(result, u"Mirror's Edge\u2122 for iPad")
+        self.assertEqual(result, "Mirror's Edge\u2122 for iPad")
     
     def testEmptyUnicodeRoot(self):
         result = readPlist(data_path('unicode_empty.plist'))
-        self.assertEquals(result, u"")
+        self.assertEqual(result, b"")
     
     def testSmallReal(self):
         result = readPlist(data_path('small_real.plist'))
-        self.assertEquals(result, {'4 byte real':0.5})
+        self.assertEqual(result, {b'4 byte real':0.5})
     
     def testKeyedArchiverPlist(self):
         """
@@ -55,15 +55,15 @@ class TestValidPlistFile(unittest.TestCase):
         ...
         """
         result = readPlist(data_path('nskeyedarchiver_example.plist'))
-        self.assertEquals(result, {'$version': 100000, 
-            '$objects': 
-                ['$null', 
-                 {'$class': Uid(3), 'somekey': Uid(2)}, 
-                 'object value as string', 
-                 {'$classes': ['Archived', 'NSObject'], '$classname': 'Archived'}
+        self.assertEqual(result, {b'$version': 100000, 
+            b'$objects': 
+                [b'$null', 
+                 {b'$class': Uid(3), b'somekey': Uid(2)}, 
+                 b'object value as string', 
+                 {b'$classes': [b'Archived', b'NSObject'], b'$classname': b'Archived'}
                  ], 
-            '$top': {'root': Uid(1)}, '$archiver': 'NSKeyedArchiver'})
-        self.assertEquals("Uid(1)", repr(Uid(1)))
+            b'$top': {b'root': Uid(1)}, b'$archiver': b'NSKeyedArchiver'})
+        self.assertEqual("Uid(1)", repr(Uid(1)))
     
 if __name__ == '__main__':
     unittest.main()

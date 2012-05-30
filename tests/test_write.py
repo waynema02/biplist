@@ -13,9 +13,14 @@ class TestWritePlist(unittest.TestCase):
         pass
     
     def roundTrip(self, root, xml=False):
-        plist = writePlistToString(root, binary=(not xml))
+        #plist = writePlistToString(root, binary=(not xml))
+        plist = writePlistToBytes(root, binary=(not xml))
+        #debug
+        print('writePlistToBytes result:', plist)
+        print(type(plist))
         self.assertTrue(len(plist) > 0)
-        readResult = readPlistFromString(plist)
+        readResult = readPlistFromBytes(plist)
+        print(type(readResult))
         self.assertEqual(readResult, root)
         self.lintPlist(plist)
     
@@ -47,13 +52,13 @@ class TestWritePlist(unittest.TestCase):
         self.roundTrip({'a':1, 'B':'d'})
     
     def boolsAndIntegersHelper(self, cases):
-        result = readPlistFromString(writePlistToString(cases))
+        result = readPlistFromBytes(writePlistToString(cases))
         for i in range(0, len(cases)):
             self.assertTrue(cases[i] == result[i])
             self.assertEqual(type(cases[i]), type(result[i]), "Type mismatch on %d: %s != %s" % (i, repr(cases[i]), repr(result[i])))
     
     def reprChecker(self, case):
-        result = readPlistFromString(writePlistToString(case))
+        result = readPlistFromBytes(writePlistToString(case))
         self.assertEqual(repr(case), repr(result))
     
     def testBoolsAndIntegersMixed(self):
@@ -76,7 +81,7 @@ class TestWritePlist(unittest.TestCase):
     def testTuple(self):
         result = writePlistToString({'aTuple':(1, 2.0, 'a'), 'dupTuple':('a', 'a', 'a', 'b', 'b')})
         self.assertTrue(len(result) > 0)
-        readResult = readPlistFromString(result)
+        readResult = readPlistFromBytes(result)
         self.assertEqual(readResult['aTuple'], [1, 2.0, 'a'])
         self.assertEqual(readResult['dupTuple'], ['a', 'a', 'a', 'b', 'b'])
     

@@ -56,8 +56,8 @@ import sys
 import time
 
 __all__ = [
-    'Uid', 'Data', 'readPlist', 'writePlist', 'readPlistFromString',
-    'writePlistToString', 'InvalidPlistException', 'NotBinaryPlistException'
+    'Uid', 'Data', 'readPlist', 'writePlist', 'readPlistFromBytes',
+    'writePlistToBytes', 'InvalidPlistException', 'NotBinaryPlistException'
 ]
 
 apple_reference_date_offset = 978307200
@@ -91,14 +91,14 @@ def readPlist(pathOrFile):
         #print('got str', 'didOpen = {}'.format(didOpen))
     try:
         #debug
-        #print('pathOrFile', pathOrFile)
+        print('pathOrFile', pathOrFile)
         reader = PlistReader(pathOrFile)
         #debug
         #print('passed PlistReader constructor')
         result = reader.parse()
         #debug
-        #print('reader', reader)
-        #print('result', result)
+        print('reader', reader)
+        print('result', result, type(result))
     except NotBinaryPlistException as e:
         try:
             pathOrFile.seek(0)
@@ -123,16 +123,17 @@ def writePlist(rootObject, pathOrFile, binary=True):
             pathOrFile.close()
         return result
 
-def readPlistFromString(data):
+def readPlistFromBytes(data):
     #return readPlist(StringIO(data))
     return readPlist(BytesIO(data))
 
-def writePlistToString(rootObject, binary=True):
+def writePlistToBytes(rootObject, binary=True):
     if not binary:
         #return plistlib.writePlistToString(rootObject)
         return plistlib.writePlistToBytes(rootObject)
     else:
-        io = StringIO()
+        #io = StringIO()
+        io = BytesIO()
         writer = PlistWriter(io)
         writer.writeRoot(rootObject)
         return io.getvalue()
@@ -169,7 +170,8 @@ class PlistReader(object):
         #debug
         #print('in PlistReader.__reset__')
         self.trailer = None
-        self.contents = ''
+        #self.contents = ''
+        self.contents = b''
         self.offsets = []
         self.currentOffset = 0
     
@@ -209,6 +211,7 @@ class PlistReader(object):
         self.currentOffset = self.offsets[objectNumber]
     
     def readObject(self):
+        print('in readObject')
         result = None
         tmp_byte = self.contents[self.currentOffset:self.currentOffset+1]
         marker_byte = unpack("!B", tmp_byte)[0]
@@ -222,6 +225,9 @@ class PlistReader(object):
                 extra = self.readObject()
             return extra
         
+        #debug
+        print('format', format, bin(format))
+        print('extra', extra, bin(extra))
         # bool, null, or fill byte
         if format == 0b0000:
             if extra == 0b0000:
@@ -247,8 +253,13 @@ class PlistReader(object):
             result = self.readDate()
         # data
         elif format == 0b0100:
+            #debug
+            print("in this block:", format)
             extra = proc_extra(extra)
             result = self.readData(extra)
+            #debug
+            print("extra:", extra)
+            print("result", result)
         # ascii string
         elif format == 0b0101:
             extra = proc_extra(extra)
@@ -274,6 +285,8 @@ class PlistReader(object):
             result = self.readDict(extra)
         else:    
             raise InvalidPlistException("Invalid object found: {format: %s, extra: %s}" % (bin(format), bin(extra)))
+        #debug
+        print('result', result)
         return result
     
     def readInteger(self, bytes):
@@ -352,9 +365,13 @@ class PlistReader(object):
         return result
     
     def readData(self, length):
+        #debug
+        print("in readData")
         result = self.contents[self.currentOffset:self.currentOffset+length]
         self.currentOffset += length
-        return Data(result)
+        #return Data(result)
+        return Data(result.decode('utf'))
+        #return result
     
     def readUid(self, length):
         return Uid(self.readInteger(length+1))
@@ -455,6 +472,10 @@ class PlistWriter(object):
         
         output = self.writeOffsetTable(output)
         output += pack('!xxxxxxBBQQQ', *self.trailer)
+        #debug
+        print('self is', self)
+        print('file is', self.file)
+        print('wirte is', self.file.write)
         self.file.write(output)
     
     def wrapRoot(self, root):

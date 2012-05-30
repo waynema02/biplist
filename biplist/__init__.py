@@ -45,7 +45,8 @@ Plist parsing example:
 """
 
 from collections import namedtuple
-from cStringIO import StringIO
+from io import StringIO
+from io import BytesIO
 import calendar
 import datetime
 import math
@@ -83,17 +84,26 @@ def readPlist(pathOrFile):
     """Raises NotBinaryPlistException, InvalidPlistException"""
     didOpen = False
     result = None
-    if isinstance(pathOrFile, (str, unicode)):
+    if isinstance(pathOrFile, str):
         pathOrFile = open(pathOrFile, 'rb')
         didOpen = True
+        #debug
+        #print('got str', 'didOpen = {}'.format(didOpen))
     try:
+        #debug
+        #print('pathOrFile', pathOrFile)
         reader = PlistReader(pathOrFile)
+        #debug
+        #print('passed PlistReader constructor')
         result = reader.parse()
-    except NotBinaryPlistException, e:
+        #debug
+        #print('reader', reader)
+        #print('result', result)
+    except NotBinaryPlistException as e:
         try:
             pathOrFile.seek(0)
             result = plistlib.readPlist(pathOrFile)
-        except Exception, e:
+        except Exception as e:
             raise InvalidPlistException(e)
     if didOpen:
         pathOrFile.close()
@@ -104,7 +114,7 @@ def writePlist(rootObject, pathOrFile, binary=True):
         return plistlib.writePlist(rootObject, pathOrFile)
     else:
         didOpen = False
-        if isinstance(pathOrFile, (str, unicode)):
+        if isinstance(pathOrFile, str):
             pathOrFile = open(pathOrFile, 'wb')
             didOpen = True
         writer = PlistWriter(pathOrFile)
@@ -114,11 +124,13 @@ def writePlist(rootObject, pathOrFile, binary=True):
         return result
 
 def readPlistFromString(data):
-    return readPlist(StringIO(data))
+    #return readPlist(StringIO(data))
+    return readPlist(BytesIO(data))
 
 def writePlistToString(rootObject, binary=True):
     if not binary:
-        return plistlib.writePlistToString(rootObject)
+        #return plistlib.writePlistToString(rootObject)
+        return plistlib.writePlistToBytes(rootObject)
     else:
         io = StringIO()
         writer = PlistWriter(io)
@@ -128,7 +140,7 @@ def writePlistToString(rootObject, binary=True):
 def is_stream_binary_plist(stream):
     stream.seek(0)
     header = stream.read(7)
-    if header == 'bplist0':
+    if header == b'bplist0':
         return True
     else:
         return False
@@ -145,6 +157,8 @@ class PlistReader(object):
     
     def __init__(self, fileOrStream):
         """Raises NotBinaryPlistException."""
+        #debug
+        #print('in PlistReader.__init__')
         self.reset()
         self.file = fileOrStream
     
@@ -152,6 +166,8 @@ class PlistReader(object):
         return self.readRoot()
     
     def reset(self):
+        #debug
+        #print('in PlistReader.__reset__')
         self.trailer = None
         self.contents = ''
         self.offsets = []
@@ -162,6 +178,9 @@ class PlistReader(object):
         self.reset()
         # Get the header, make sure it's a valid file.
         if not is_stream_binary_plist(self.file):
+            #debug
+            #print('is_stream_binary_plist test failed')
+            #print('self.file = {}'.format(self.file))
             raise NotBinaryPlistException()
         self.file.seek(0)
         self.contents = self.file.read()
@@ -182,7 +201,7 @@ class PlistReader(object):
                 offset_i += 1
             self.setCurrentOffsetToObjectNumber(self.trailer.topLevelObjectNumber)
             result = self.readObject()
-        except TypeError, e:
+        except TypeError as e:
             raise InvalidPlistException(e)
         return result
     
@@ -368,7 +387,8 @@ class BoolWrapper(object):
         return "<BoolWrapper: %s>" % self.value
 
 class PlistWriter(object):
-    header = 'bplist00bybiplist1.0'
+    #header = 'bplist00bybiplist1.0'
+    header = b'bplist00bybiplist1.0'
     file = None
     byteCounts = None
     trailer = None
@@ -450,7 +470,7 @@ class PlistWriter(object):
             return HashableWrapper(n)
         elif isinstance(root, dict):
             n = {}
-            for key, value in root.iteritems():
+            for key, value in root.items():
                 n[self.wrapRoot(key)] = self.wrapRoot(value)
             return HashableWrapper(n)
         elif isinstance(root, list):
@@ -473,7 +493,7 @@ class PlistWriter(object):
                 raise InvalidPlistException('Dictionary keys cannot be null in plists.')
             elif isinstance(key, Data):
                 raise InvalidPlistException('Data cannot be dictionary keys in plists.')
-            elif not isinstance(key, (str, unicode)):
+            elif not isinstance(key, str):
                 raise InvalidPlistException('Keys must be strings.')
         
         def proc_size(size):
@@ -495,7 +515,7 @@ class PlistWriter(object):
         elif isinstance(obj, Uid):
             size = self.intSize(obj)
             self.incrementByteCount('uidBytes', incr=1+size)
-        elif isinstance(obj, (int, long)):
+        elif isinstance(obj, int):
             size = self.intSize(obj)
             self.incrementByteCount('intBytes', incr=1+size)
         elif isinstance(obj, (float)):
@@ -506,7 +526,7 @@ class PlistWriter(object):
         elif isinstance(obj, Data):
             size = proc_size(len(obj))
             self.incrementByteCount('dataBytes', incr=1+size)
-        elif isinstance(obj, (str, unicode)):
+        elif isinstance(obj, str):
             size = proc_size(len(obj))
             self.incrementByteCount('stringBytes', incr=1+size)
         elif isinstance(obj, HashableWrapper):
@@ -525,7 +545,7 @@ class PlistWriter(object):
             elif isinstance(obj, dict):
                 size = proc_size(len(obj))
                 self.incrementByteCount('dictBytes', incr=1+size)
-                for key, value in obj.iteritems():
+                for key, value in obj.items():
                     check_key(key)
                     self.computeOffsets(key, asReference=True)
                     self.computeOffsets(value, asReference=True)
@@ -554,7 +574,8 @@ class PlistWriter(object):
            object was written.
         """
         def proc_variable_length(format, length):
-            result = ''
+            #result = ''
+            result = b''
             if length > 0b1110:
                 result += pack('!B', (format << 4) | 0b1111)
                 result = self.writeObject(length, result)
@@ -562,7 +583,7 @@ class PlistWriter(object):
                 result += pack('!B', (format << 4) | length)
             return result
         
-        if isinstance(obj, unicode) and obj == u'':
+        if isinstance(obj, str) and obj == '':
             # The Apple Plist decoder can't decode a zero length Unicode string.
             obj = ''
         
@@ -580,7 +601,7 @@ class PlistWriter(object):
             size = self.intSize(obj)
             output += pack('!B', (0b1000 << 4) | size - 1)
             output += self.binaryInt(obj)
-        elif isinstance(obj, (int, long)):
+        elif isinstance(obj, int):
             bytes = self.intSize(obj)
             root = math.log(bytes, 2)
             output += pack('!B', (0b0001 << 4) | int(root))
@@ -596,9 +617,13 @@ class PlistWriter(object):
             output += pack('!d', float(timestamp))
         elif isinstance(obj, Data):
             output += proc_variable_length(0b0100, len(obj))
-            output += obj
-        elif isinstance(obj, (str, unicode)):
-            if isinstance(obj, unicode):
+            #debug
+            print('output is', output)
+            print('obj is', obj, type(obj))
+            #output += obj
+            output += str(obj).encode('utf8')
+        elif isinstance(obj, str):
+            if isinstance(obj, str):
                 bytes = obj.encode('utf_16_be')
                 output += proc_variable_length(0b0110, len(bytes)/2)
                 output += bytes
@@ -626,7 +651,7 @@ class PlistWriter(object):
                 keys = []
                 values = []
                 objectsToWrite = []
-                for key, value in obj.iteritems():
+                for key, value in obj.items():
                     keys.append(key)
                     values.append(value)
                 for key in keys:
@@ -644,8 +669,11 @@ class PlistWriter(object):
     def writeOffsetTable(self, output):
         """Writes all of the object reference offsets."""
         all_positions = []
-        writtenReferences = self.writtenReferences.items()
-        writtenReferences.sort(lambda x,y: cmp(x[1], y[1]))
+        writtenReferences = list(self.writtenReferences.items())
+        #debug
+        print('writtenReference', writtenReferences)
+        #writtenReferences.sort(lambda x,y: cmp(x[1], y[1]))
+        sorted(writtenReferences, key=lambda x: x[1])
         for obj,order in writtenReferences:
             position = self.referencePositions.get(obj)
             if position is None:
@@ -660,7 +688,8 @@ class PlistWriter(object):
         return result
     
     def binaryInt(self, obj, bytes=None):
-        result = ''
+        #result = ''
+        result = b''
         if bytes is None:
             bytes = self.intSize(obj)
         if bytes == 1:

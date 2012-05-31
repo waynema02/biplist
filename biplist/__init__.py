@@ -652,7 +652,8 @@ class PlistWriter(object):
         elif isinstance(obj, str):
             if isinstance(obj, str):
                 bytes = obj.encode('utf_16_be')
-                output += proc_variable_length(0b0110, len(bytes)/2)
+                #output += proc_variable_length(0b0110, len(bytes)/2)
+                output += proc_variable_length(0b0110, len(bytes)//2)
                 output += bytes
             else:
                 bytes = obj

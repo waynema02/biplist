@@ -125,6 +125,7 @@ def writePlist(rootObject, pathOrFile, binary=True):
 
 def readPlistFromBytes(data):
     #return readPlist(StringIO(data))
+    print('readPlistFromBytes input:', data)
     return readPlist(BytesIO(data))
 
 def writePlistToBytes(rootObject, binary=True):
@@ -186,11 +187,14 @@ class PlistReader(object):
             raise NotBinaryPlistException()
         self.file.seek(0)
         self.contents = self.file.read()
+        #debug
+        print('readdRoot self.contents', self.contents)
         if len(self.contents) < 32:
             raise InvalidPlistException("File is too short.")
         trailerContents = self.contents[-32:]
         try:
             self.trailer = PlistTrailer._make(unpack("!xxxxxxBBQQQ", trailerContents))
+            print('self.trailer is', self.trailer)
             offset_size = self.trailer.offsetSize * self.trailer.offsetCount
             offset = self.trailer.offsetTableOffset
             offset_contents = self.contents[offset:offset+offset_size]
@@ -205,6 +209,8 @@ class PlistReader(object):
             result = self.readObject()
         except TypeError as e:
             raise InvalidPlistException(e)
+    	#debug
+        print('result from readRoot', result)
         return result
     
     def setCurrentOffsetToObjectNumber(self, objectNumber):

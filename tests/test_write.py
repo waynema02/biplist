@@ -27,6 +27,8 @@ class TestWritePlist(unittest.TestCase):
     def lintPlist(self, plistString):
         if os.path.exists('/usr/bin/plutil'):
             f = tempfile.NamedTemporaryFile()
+            if isinstance(plistString, str):
+                plistString = plistString.encode('utf8')
             f.write(plistString)
             f.flush()
             name = f.name

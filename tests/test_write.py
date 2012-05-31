@@ -17,9 +17,9 @@ class TestWritePlist(unittest.TestCase):
         plist = writePlistToBytes(root, binary=(not xml))
         #debug
         print('writePlistToBytes result:', plist)
-        print(type(plist))
         self.assertTrue(len(plist) > 0)
         readResult = readPlistFromBytes(plist)
+        print('readPlistFromBytes result:', readResult)
         print(type(readResult))
         self.assertEqual(readResult, root)
         self.lintPlist(plist)

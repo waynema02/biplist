@@ -113,7 +113,11 @@ class TestWritePlist(unittest.TestCase):
             path = '/var/tmp/test.plist'
             writePlist([1, 2, 3], path, binary=is_binary)
             self.assertTrue(os.path.exists(path))
+        if not is_binary:
             self.lintPlist(open(path).read())
+        else:
+            self.lintPlist(open(path, 'rb').read())
+
     
     def testNone(self):
         self.roundTrip(None)

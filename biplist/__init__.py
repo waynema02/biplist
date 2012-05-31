@@ -98,7 +98,7 @@ def readPlist(pathOrFile):
         result = reader.parse()
         #debug
         print('reader', reader)
-        print('result', result, type(result))
+        #print('result', result, type(result))
     except NotBinaryPlistException as e:
         try:
             pathOrFile.seek(0)
@@ -210,7 +210,7 @@ class PlistReader(object):
         except TypeError as e:
             raise InvalidPlistException(e)
     	#debug
-        print('result from readRoot', result)
+        #print('result from readRoot', result)
         return result
     
     def setCurrentOffsetToObjectNumber(self, objectNumber):
@@ -292,7 +292,7 @@ class PlistReader(object):
         else:    
             raise InvalidPlistException("Invalid object found: {format: %s, extra: %s}" % (bin(format), bin(extra)))
         #debug
-        print('result', result)
+        #print('result', result)
         return result
     
     def readInteger(self, bytes):
@@ -361,6 +361,7 @@ class PlistReader(object):
         data = self.contents[self.currentOffset:self.currentOffset+actual_length]
         # unpack not needed?!! data = unpack(">%ds" % (actual_length), data)[0]
         self.currentOffset += actual_length
+        #return data.decode('utf_8')
         return data.decode('utf_16_be')
     
     def readDate(self):
@@ -699,10 +700,11 @@ class PlistWriter(object):
         all_positions = []
         writtenReferences = list(self.writtenReferences.items())
         #debug
-        print('writtenReferences', writtenReferences)
+        #print('writtenReferences', writtenReferences)
+        print('writtenReferences', type(writtenReferences))
         writtenReferences.sort(key=lambda x: x[1])
         #debug
-        print('writtenReferences after sorted', writtenReferences)
+        #print('writtenReferences after sorted', writtenReferences)
         for obj,order in writtenReferences:
             position = self.referencePositions.get(obj)
             if position is None:

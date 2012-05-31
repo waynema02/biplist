@@ -152,7 +152,7 @@ PlistByteCounts = namedtuple('PlistByteCounts', 'nullBytes, boolBytes, intBytes,
 
 class PlistReader(object):
     file = None
-    contents = ''
+    contents = b''
     offsets = None
     trailer = None
     currentOffset = 0

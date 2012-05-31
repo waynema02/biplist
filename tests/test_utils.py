@@ -12,7 +12,7 @@ def run_command(args, verbose = False):
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     stdin, stdout = (p.stdin, p.stdout)
     output = stdout.read()
-    output = output.strip("\n")
+    output = output.strip(b"\n")
     status = stdin.close()
     p.wait()
     return p.returncode, output

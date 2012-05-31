@@ -13,3 +13,6 @@ Icon*
 
 # other noise
 .svn
+
+# vim noise
+.*.swp

@@ -699,9 +699,10 @@ class PlistWriter(object):
         all_positions = []
         writtenReferences = list(self.writtenReferences.items())
         #debug
-        print('writtenReference', writtenReferences)
-        #writtenReferences.sort(lambda x,y: cmp(x[1], y[1]))
-        sorted(writtenReferences, key=lambda x: x[1])
+        print('writtenReferences', writtenReferences)
+        writtenReferences.sort(key=lambda x: x[1])
+        #debug
+        print('writtenReferences after sorted', writtenReferences)
         for obj,order in writtenReferences:
             position = self.referencePositions.get(obj)
             if position is None:

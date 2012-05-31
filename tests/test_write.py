@@ -33,6 +33,7 @@ class TestWritePlist(unittest.TestCase):
             f.flush()
             name = f.name
             (status, output) = run_command(['/usr/bin/plutil', '-lint', name])
+            f.close()
             if status != 0:
                 self.fail("plutil verification failed (status %d): %s" % (status, output))
     
